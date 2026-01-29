@@ -337,23 +337,26 @@ export const ColorTab: FC<ColorTabProps> = ({
                         : `Stop ${index}`}
                   </span>
 
-                  {/* Color picker (compact) */}
-                  <div className="relative w-8 h-8 rounded-full shadow-inner ring-1 ring-black/5 dark:ring-white/10 overflow-hidden flex-shrink-0">
-                    <input
-                      type="color"
-                      value={stop.color}
-                      onChange={(e) =>
-                        updateGradientStop(index, { color: e.target.value })
-                      }
-                      className="absolute inset-0 w-[150%] h-[150%] -top-1/4 -left-1/4 cursor-pointer opacity-0 z-10"
-                      aria-label={`Color for stop ${index + 1}`}
-                    />
-                    <div
-                      className="w-full h-full"
-                      style={{ backgroundColor: stop.color }}
-                      aria-hidden="true"
-                    />
-                  </div>
+                  {/* Color picker swatch button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const input = e.currentTarget.nextElementSibling as HTMLInputElement;
+                      input?.click();
+                    }}
+                    className="relative w-8 h-8 rounded-full shadow-inner ring-1 ring-black/5 dark:ring-white/10 overflow-hidden flex-shrink-0 hover:ring-2 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    aria-label={`Color picker for stop ${index + 1}`}
+                    style={{ backgroundColor: stop.color }}
+                  />
+                  <input
+                    type="color"
+                    value={stop.color}
+                    onChange={(e) =>
+                      updateGradientStop(index, { color: e.target.value })
+                    }
+                    className="hidden"
+                    aria-hidden="true"
+                  />
 
                   {/* Hex input */}
                   <input
