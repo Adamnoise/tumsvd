@@ -26,34 +26,38 @@ export interface UseLayerManagerReturn {
   layers: Layer[];
   selectedLayerId: string | null;
   selectedLayer: Layer | null;
-  
+
   // CRUD Operations
   addLayer: (type: LayerType, name?: string, content?: LayerContent) => Layer;
   removeLayer: (layerId: string) => void;
   updateLayer: (layerId: string, updates: Partial<Layer>) => void;
   duplicateLayer: (layerId: string) => Layer | null;
-  
+
   // Selection
   selectLayer: (layerId: string | null) => void;
-  
+
   // Visibility & Locking
   toggleVisibility: (layerId: string) => void;
   toggleLock: (layerId: string) => void;
   toggleSolo: (layerId: string) => void;
-  
+
   // Ordering
   moveLayer: (layerId: string, direction: 'up' | 'down') => void;
   reorderLayers: (startIndex: number, endIndex: number) => void;
-  
+
   // Transform
   updateTransform: (layerId: string, transform: Partial<Transform>) => void;
-  
+
   // Blend Mode
   setBlendMode: (layerId: string, blendMode: BlendMode) => void;
-  
+
   // Opacity
   setOpacity: (layerId: string, opacity: number) => void;
-  
+
+  // Shape Content (for superellipse layers)
+  updateShapeContent: (layerId: string, updates: Partial<ShapeContent>) => void;
+  updateSelectedShapeContent: (updates: Partial<ShapeContent>) => void;
+
   // Bulk Operations
   groupLayers: (layerIds: string[]) => Layer | null;
   flattenLayers: (layerIds: string[]) => void;
