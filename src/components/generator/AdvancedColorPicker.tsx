@@ -157,11 +157,10 @@ export const AdvancedColorPicker = forwardRef<HTMLDivElement, AdvancedColorPicke
         {/* Dropdown color picker */}
         {isOpen && (
           <div className="relative z-50 p-3 bg-background border border-border rounded-lg shadow-lg animate-fade-in">
-            <Chrome
+            <ChromePicker
               color={hex}
               onChange={handleColorChange}
               disableAlpha={true}
-              width="100%"
             />
             <button
               onClick={() => setIsOpen(false)}
