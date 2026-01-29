@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Download, FileCode, FileJson, Copy, Check, Image, AlertCircle, Code2 } from 'lucide-react';
+import { Download, FileCode, FileJson, Copy, Check, Image, AlertCircle, Code2, Zap } from 'lucide-react';
 import { ExportModal } from '../modals/ExportModal';
+import { exportPNG, exportSVG, PNG_RESOLUTION_PRESETS, estimatePNGSize, ExportProgress } from '../../../utils/exportHelpers';
 
 // ============================================================================
 // TYPES
