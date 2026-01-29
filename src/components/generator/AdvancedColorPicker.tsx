@@ -1,9 +1,7 @@
-import React, { useState, useEffect, forwardRef, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, forwardRef, useCallback } from 'react';
+import { ChromePicker } from 'react-color';
 import { Eye, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-// Lazy load Chrome color picker to avoid bundle size issues
-const Chrome = lazy(() => import('react-color').then(module => ({ default: module.ChromePicker })));
 
 interface AdvancedColorPickerProps {
   color: string;
