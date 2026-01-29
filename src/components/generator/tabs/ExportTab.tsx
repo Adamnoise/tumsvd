@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Download, FileCode, FileJson, Copy, Check, Image, AlertCircle, Code2 } from 'lucide-react';
+import { Download, FileCode, FileJson, Copy, Check, Image, AlertCircle, Code2, Zap } from 'lucide-react';
 import { ExportModal } from '../modals/ExportModal';
+import { exportPNG, exportSVG, PNG_RESOLUTION_PRESETS, estimatePNGSize, ExportProgress } from '../../../utils/exportHelpers';
 
 // ============================================================================
 // TYPES
@@ -172,59 +173,55 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, pathData }) => {
   const [showCSS, setShowCSS] = useState(false);
   const [showJSON, setShowJSON] = useState(false);
   const [downloadingPNG, setDownloadingPNG] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [pngResolution, setPngResolution] = useState(2);
 
   // Memoized code generation
   const cssCode = useMemo(() => generateCSS(state, pathData), [state, pathData]);
   const jsonCode = useMemo(() => JSON.stringify(state, null, 2), [state]);
+  const estimatedSize = useMemo(
+    () => estimatePNGSize(state.width, state.height, pngResolution),
+    [state.width, state.height, pngResolution]
+  );
 
   const handleDownloadSVG = useCallback(() => {
-    downloadSVG(state, pathData, `superellipse-${Date.now()}.svg`);
+    try {
+      setExportError(null);
+      exportSVG(state, pathData, `superellipse-${Date.now()}.svg`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to export SVG';
+      setExportError(message);
+    }
   }, [state, pathData]);
 
   const handleDownloadPNG = useCallback(async () => {
     setDownloadingPNG(true);
+    setExportError(null);
+    setExportProgress(null);
+
     try {
-      const svg = generateSVG(state, pathData);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Could not get canvas context');
-      
-      const img = new window.Image();
-      const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
-
-      img.onload = () => {
-        canvas.width = state.width;
-        canvas.height = state.height;
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const pngUrl = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = pngUrl;
-            link.download = `superellipse-${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(pngUrl);
+      await exportPNG(
+        state,
+        pathData,
+        `superellipse-${Date.now()}.png`,
+        pngResolution,
+        (progress) => {
+          setExportProgress(progress);
+          if (progress.stage === 'error') {
+            setExportError(progress.message);
           }
-          setDownloadingPNG(false);
-          URL.revokeObjectURL(url);
-        }, 'image/png');
-      };
-      
-      img.onerror = () => {
-        throw new Error('Failed to load image for PNG export');
-      };
-
-      img.src = url;
+        }
+      );
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to export PNG';
+      setExportError(message);
       console.error('PNG export failed:', error);
-      alert('Failed to export PNG. Please try again.');
+    } finally {
       setDownloadingPNG(false);
     }
-  }, [state, pathData]);
+  }, [state, pathData, pngResolution]);
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -233,17 +230,81 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, pathData }) => {
         Export Options
       </p>
 
+      {/* Error Display */}
+      {exportError && (
+        <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-700 dark:text-red-300">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="flex-1">
+            <p className="font-medium">Export Error</p>
+            <p className="text-[11px] mt-0.5">{exportError}</p>
+          </div>
+          <button
+            onClick={() => setExportError(null)}
+            className="text-red-500 hover:text-red-700 flex-shrink-0"
+            aria-label="Dismiss error"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* PNG Resolution Selector */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide flex items-center gap-2">
+          <Zap className="w-3 h-3" />
+          PNG Resolution
+        </label>
+        <select
+          value={pngResolution}
+          onChange={(e) => setPngResolution(Number(e.target.value))}
+          disabled={downloadingPNG}
+          className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          {PNG_RESOLUTION_PRESETS.map((preset) => (
+            <option key={preset.value} value={preset.value}>
+              {preset.label}
+            </option>
+          ))}
+          <option value={4}>4x (Extra)</option>
+        </select>
+        <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+          Size estimate: {estimatedSize} • {state.width * pngResolution} × {state.height * pngResolution}px
+        </p>
+      </div>
+
+      {/* Progress Display */}
+      {exportProgress && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+              {exportProgress.message}
+            </p>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+              {exportProgress.progress}%
+            </p>
+          </div>
+          <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 transition-all duration-300"
+              style={{ width: `${exportProgress.progress}%` }}
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Download Buttons */}
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={handleDownloadSVG}
+          disabled={downloadingPNG}
           aria-label="Download current superellipse as SVG"
-          className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 text-white text-sm font-medium shadow-lg shadow-indigo-500/20 hover:from-indigo-600 hover:to-indigo-700 active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 text-white text-sm font-medium shadow-lg shadow-indigo-500/20 hover:from-indigo-600 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           <Image className="w-4 h-4" aria-hidden="true" />
           SVG
         </button>
-        
+
         <button
           onClick={handleDownloadPNG}
           disabled={downloadingPNG}

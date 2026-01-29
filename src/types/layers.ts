@@ -82,10 +82,76 @@ export interface Layer {
   content?: LayerContent;
 }
 
+export interface GradientStop {
+  color: string;
+  position: number;
+}
+
+export interface CornerExponents {
+  topLeft: number;
+  topRight: number;
+  bottomRight: number;
+  bottomLeft: number;
+}
+
 export interface ShapeContent {
   type: 'superellipse';
+
+  // Dimensions
+  width: number;
+  height: number;
+  exp: number;
+  smoothing: number;
+
+  // Asymmetric corners
+  useAsymmetricCorners: boolean;
+  cornerExponents: CornerExponents;
+
+  // Colors
+  colorMode: 'solid' | 'linear' | 'radial' | 'conic';
+  solidColor: string;
+  solidOpacity: number;
+  gradientStops: GradientStop[];
+  gradientAngle: number;
+
+  // Glow (OKLCH)
+  enabled: boolean;
+  hue: number;
+  chroma: number;
+  lightness: number;
+  glowMaskSize: number;
+  glowScale: number;
+  glowPositionX: number;
+  glowPositionY: number;
+  glowOpacity: number;
+  glowBlur: number;
+  glowSpread: number;
+
+  // Effects
+  blur: number;
+  backdropBlur: number;
+  noiseEnabled: boolean;
+  noiseIntensity: number;
+
+  // Border/Stroke
+  borderEnabled: boolean;
+  strokeColor: string;
+  strokeWidth: number;
+  strokePosition: 'inside' | 'center' | 'outside';
+  strokeStyle: 'solid' | 'dashed' | 'dotted';
+  strokeOpacity: number;
+
+  // Shadow
+  shadowDistance: number;
+  shadowIntensity: number;
+
+  // Animation
+  glowAnimation: 'none' | 'pulse' | 'breathe' | 'rotate' | 'wave' | 'float';
+  glowAnimationSpeed: number;
+  glowAnimationIntensity: number;
+
+  // Cached path data
   pathData?: string;
-  fill?: string;
 }
 
 export interface ImageContent {

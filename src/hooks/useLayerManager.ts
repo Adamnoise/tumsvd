@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Layer, BlendMode, Transform, LayerType, LayerContent, DEFAULT_TRANSFORM } from '../types/layers';
+import { Layer, BlendMode, Transform, LayerType, LayerContent, DEFAULT_TRANSFORM, ShapeContent } from '../types/layers';
+import { DEFAULT_SHAPE_CONTENT } from '../utils/shapeDefaults';
 
 let layerIdCounter = 0;
 
@@ -25,34 +26,38 @@ export interface UseLayerManagerReturn {
   layers: Layer[];
   selectedLayerId: string | null;
   selectedLayer: Layer | null;
-  
+
   // CRUD Operations
   addLayer: (type: LayerType, name?: string, content?: LayerContent) => Layer;
   removeLayer: (layerId: string) => void;
   updateLayer: (layerId: string, updates: Partial<Layer>) => void;
   duplicateLayer: (layerId: string) => Layer | null;
-  
+
   // Selection
   selectLayer: (layerId: string | null) => void;
-  
+
   // Visibility & Locking
   toggleVisibility: (layerId: string) => void;
   toggleLock: (layerId: string) => void;
   toggleSolo: (layerId: string) => void;
-  
+
   // Ordering
   moveLayer: (layerId: string, direction: 'up' | 'down') => void;
   reorderLayers: (startIndex: number, endIndex: number) => void;
-  
+
   // Transform
   updateTransform: (layerId: string, transform: Partial<Transform>) => void;
-  
+
   // Blend Mode
   setBlendMode: (layerId: string, blendMode: BlendMode) => void;
-  
+
   // Opacity
   setOpacity: (layerId: string, opacity: number) => void;
-  
+
+  // Shape Content (for superellipse layers)
+  updateShapeContent: (layerId: string, updates: Partial<ShapeContent>) => void;
+  updateSelectedShapeContent: (updates: Partial<ShapeContent>) => void;
+
   // Bulk Operations
   groupLayers: (layerIds: string[]) => Layer | null;
   flattenLayers: (layerIds: string[]) => void;
@@ -61,7 +66,7 @@ export interface UseLayerManagerReturn {
 
 export function useLayerManager(): UseLayerManagerReturn {
   const [layers, setLayers] = useState<Layer[]>([
-    createDefaultLayer('shape', 'Main Shape', { type: 'superellipse' }),
+    createDefaultLayer('shape', 'Main Shape', DEFAULT_SHAPE_CONTENT as ShapeContent),
   ]);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(
     layers[0]?.id || null
@@ -234,6 +239,28 @@ export function useLayerManager(): UseLayerManagerReturn {
     setSelectedLayerId(null);
   }, []);
 
+  // Shape Content Management
+  const updateShapeContent = useCallback((layerId: string, updates: Partial<ShapeContent>) => {
+    setLayers(prev => prev.map(layer => {
+      if (layer.id === layerId && layer.type === 'shape' && layer.content?.type === 'superellipse') {
+        return {
+          ...layer,
+          content: {
+            ...layer.content,
+            ...updates,
+          } as ShapeContent,
+        };
+      }
+      return layer;
+    }));
+  }, []);
+
+  const updateSelectedShapeContent = useCallback((updates: Partial<ShapeContent>) => {
+    if (selectedLayerId) {
+      updateShapeContent(selectedLayerId, updates);
+    }
+  }, [selectedLayerId, updateShapeContent]);
+
   return {
     layers,
     selectedLayerId,
@@ -251,6 +278,8 @@ export function useLayerManager(): UseLayerManagerReturn {
     updateTransform,
     setBlendMode,
     setOpacity,
+    updateShapeContent,
+    updateSelectedShapeContent,
     groupLayers,
     flattenLayers,
     clearAllLayers,

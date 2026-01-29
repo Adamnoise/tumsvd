@@ -2,6 +2,7 @@ import React, { memo, useState, useCallback } from 'react';
 import { Eye, EyeOff, Lock, Unlock, GripVertical, Trash2, Copy, Square, Image, Type, Folder, MoreHorizontal } from 'lucide-react';
 import { Layer } from '@/types/layers';
 import { cn } from '@/lib/utils';
+import { LayerThumbnail } from './LayerThumbnail';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +58,7 @@ export const LayerItem = memo<LayerItemProps>(({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(layer.name);
+  const [dragOverZone, setDragOverZone] = useState<'top' | 'center' | 'bottom' | null>(null);
 
   const TypeIcon = LAYER_TYPE_ICONS[layer.type];
   const typeColor = LAYER_TYPE_COLORS[layer.type];
@@ -94,19 +96,40 @@ export const LayerItem = memo<LayerItemProps>(({
     onDuplicate(layer.id);
   }, [layer.id, onDuplicate]);
 
+  const handleDragOverWithZone = useCallback((e: React.DragEvent) => {
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const zone = y < rect.height / 3 ? 'top' : y > (rect.height * 2) / 3 ? 'bottom' : 'center';
+    setDragOverZone(zone);
+    onDragOver(e, index);
+  }, [index, onDragOver]);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverZone(null);
+  }, []);
+
+  const handleDragEndWithReset = useCallback(() => {
+    setDragOverZone(null);
+    onDragEnd();
+  }, [onDragEnd]);
+
   return (
     <div
       draggable={!layer.locked}
       onDragStart={(e) => onDragStart(e, index)}
-      onDragOver={(e) => onDragOver(e, index)}
-      onDragEnd={onDragEnd}
+      onDragOver={handleDragOverWithZone}
+      onDragLeave={handleDragLeave}
+      onDragEnd={handleDragEndWithReset}
       onClick={() => onSelect(layer.id)}
       className={cn(
-        "group flex items-center gap-1.5 px-2 py-2 rounded-lg transition-all duration-150 cursor-pointer",
-        isSelected 
-          ? "bg-primary/10 border border-primary/40 shadow-sm" 
+        "group flex items-center gap-1.5 px-2 py-2 rounded-lg transition-all duration-150 cursor-pointer relative",
+        isSelected
+          ? "bg-primary/10 border border-primary/40 shadow-sm"
           : "hover:bg-muted/60 border border-transparent",
         isDragging && "opacity-50 scale-[0.98]",
+        dragOverZone === 'center' && "bg-primary/20 border-primary/60",
+        dragOverZone === 'top' && "border-t-2 border-t-primary/60",
+        dragOverZone === 'bottom' && "border-b-2 border-b-primary/60",
         !layer.visible && "opacity-60"
       )}
       role="listitem"
@@ -168,10 +191,11 @@ export const LayerItem = memo<LayerItemProps>(({
         )}
       </button>
 
-      {/* Type Icon */}
-      <div className={cn("p-1 rounded bg-muted/50 flex-shrink-0", typeColor)}>
-        <TypeIcon className="w-3 h-3" />
-      </div>
+      {/* Layer Thumbnail/Preview */}
+      <LayerThumbnail
+        layer={layer}
+        size="sm"
+      />
 
       {/* Layer Name */}
       {isEditing ? (

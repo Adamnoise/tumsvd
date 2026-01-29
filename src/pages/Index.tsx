@@ -4,13 +4,14 @@ import { PreviewArea } from '../components/generator/PreviewArea';
 import { ControlPanel } from '../components/generator/ControlPanel';
 import { LayerPanel } from '../components/generator/layers';
 import { CanvasContainer } from '../components/generator/CanvasContainer';
-import { useSuperellipse } from '../hooks/useSuperellipse';
 import { useLayerManager } from '../hooks/useLayerManager';
+import { useSelectedShapeContent } from '../hooks/useSelectedShapeContent';
 import { useCanvasNavigation } from '../hooks/useCanvasNavigation';
 
 const Index: React.FC = () => {
-  const { state, updateState, updateGradientStop, resetState, loadState, randomizeGlow, pathData } = useSuperellipse();
   const layerManager = useLayerManager();
+  const { state, updateState, updateGradientStop, resetState, loadState, randomizeGlow, pathData } =
+    useSelectedShapeContent(layerManager.selectedLayer, layerManager.updateSelectedShapeContent);
   const canvasNav = useCanvasNavigation();
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
