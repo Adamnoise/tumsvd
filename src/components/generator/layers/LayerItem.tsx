@@ -96,12 +96,30 @@ export const LayerItem = memo<LayerItemProps>(({
     onDuplicate(layer.id);
   }, [layer.id, onDuplicate]);
 
+  const handleDragOverWithZone = useCallback((e: React.DragEvent) => {
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const zone = y < rect.height / 3 ? 'top' : y > (rect.height * 2) / 3 ? 'bottom' : 'center';
+    setDragOverZone(zone);
+    onDragOver(e, index);
+  }, [index, onDragOver]);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverZone(null);
+  }, []);
+
+  const handleDragEndWithReset = useCallback(() => {
+    setDragOverZone(null);
+    onDragEnd();
+  }, [onDragEnd]);
+
   return (
     <div
       draggable={!layer.locked}
       onDragStart={(e) => onDragStart(e, index)}
-      onDragOver={(e) => onDragOver(e, index)}
-      onDragEnd={onDragEnd}
+      onDragOver={handleDragOverWithZone}
+      onDragLeave={handleDragLeave}
+      onDragEnd={handleDragEndWithReset}
       onClick={() => onSelect(layer.id)}
       className={cn(
         "group flex items-center gap-1.5 px-2 py-2 rounded-lg transition-all duration-150 cursor-pointer",
