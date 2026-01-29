@@ -62,7 +62,7 @@ export interface UseLayerManagerReturn {
 
 export function useLayerManager(): UseLayerManagerReturn {
   const [layers, setLayers] = useState<Layer[]>([
-    createDefaultLayer('shape', 'Main Shape', { type: 'superellipse' }),
+    createDefaultLayer('shape', 'Main Shape', DEFAULT_SHAPE_CONTENT as ShapeContent),
   ]);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(
     layers[0]?.id || null
