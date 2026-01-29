@@ -279,10 +279,10 @@ export const ColorTab: FC<ColorTabProps> = ({
             </div>
           </div>
 
-          {/* Color Picker with validation */}
-          <ColorInput
-            value={state.solidColor}
-            onChange={(color) => updateState({ solidColor: color })}
+          {/* Advanced Color Picker */}
+          <AdvancedColorPicker
+            color={state.solidColor}
+            onColorChange={(color) => updateState({ solidColor: color })}
             label="Custom Color"
           />
 
