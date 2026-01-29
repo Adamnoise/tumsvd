@@ -2,6 +2,7 @@ import React, { memo, useState, useCallback } from 'react';
 import { Eye, EyeOff, Lock, Unlock, GripVertical, Trash2, Copy, Square, Image, Type, Folder, MoreHorizontal } from 'lucide-react';
 import { Layer } from '@/types/layers';
 import { cn } from '@/lib/utils';
+import { LayerThumbnail } from './LayerThumbnail';
 import {
   DropdownMenu,
   DropdownMenuContent,
