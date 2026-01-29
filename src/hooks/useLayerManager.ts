@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Layer, BlendMode, Transform, LayerType, LayerContent, DEFAULT_TRANSFORM } from '../types/layers';
+import { Layer, BlendMode, Transform, LayerType, LayerContent, DEFAULT_TRANSFORM, ShapeContent } from '../types/layers';
+import { DEFAULT_SHAPE_CONTENT } from '../utils/shapeDefaults';
 
 let layerIdCounter = 0;
 
