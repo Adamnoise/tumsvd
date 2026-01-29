@@ -278,6 +278,8 @@ export function useLayerManager(): UseLayerManagerReturn {
     updateTransform,
     setBlendMode,
     setOpacity,
+    updateShapeContent,
+    updateSelectedShapeContent,
     groupLayers,
     flattenLayers,
     clearAllLayers,
