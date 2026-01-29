@@ -173,59 +173,55 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, pathData }) => {
   const [showCSS, setShowCSS] = useState(false);
   const [showJSON, setShowJSON] = useState(false);
   const [downloadingPNG, setDownloadingPNG] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [pngResolution, setPngResolution] = useState(2);
 
   // Memoized code generation
   const cssCode = useMemo(() => generateCSS(state, pathData), [state, pathData]);
   const jsonCode = useMemo(() => JSON.stringify(state, null, 2), [state]);
+  const estimatedSize = useMemo(
+    () => estimatePNGSize(state.width, state.height, pngResolution),
+    [state.width, state.height, pngResolution]
+  );
 
   const handleDownloadSVG = useCallback(() => {
-    downloadSVG(state, pathData, `superellipse-${Date.now()}.svg`);
+    try {
+      setExportError(null);
+      exportSVG(state, pathData, `superellipse-${Date.now()}.svg`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to export SVG';
+      setExportError(message);
+    }
   }, [state, pathData]);
 
   const handleDownloadPNG = useCallback(async () => {
     setDownloadingPNG(true);
+    setExportError(null);
+    setExportProgress(null);
+
     try {
-      const svg = generateSVG(state, pathData);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Could not get canvas context');
-      
-      const img = new window.Image();
-      const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
-
-      img.onload = () => {
-        canvas.width = state.width;
-        canvas.height = state.height;
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const pngUrl = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = pngUrl;
-            link.download = `superellipse-${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(pngUrl);
+      await exportPNG(
+        state,
+        pathData,
+        `superellipse-${Date.now()}.png`,
+        pngResolution,
+        (progress) => {
+          setExportProgress(progress);
+          if (progress.stage === 'error') {
+            setExportError(progress.message);
           }
-          setDownloadingPNG(false);
-          URL.revokeObjectURL(url);
-        }, 'image/png');
-      };
-      
-      img.onerror = () => {
-        throw new Error('Failed to load image for PNG export');
-      };
-
-      img.src = url;
+        }
+      );
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to export PNG';
+      setExportError(message);
       console.error('PNG export failed:', error);
-      alert('Failed to export PNG. Please try again.');
+    } finally {
       setDownloadingPNG(false);
     }
-  }, [state, pathData]);
+  }, [state, pathData, pngResolution]);
 
   return (
     <div className="space-y-4 animate-fade-in">
