@@ -7,6 +7,7 @@ import {
 } from "../../../hooks/useSuperellipse";
 import { tailwindColors } from "../../../utils/colorPalette";
 import { CustomSlider } from "../CustomSlider";
+import { AdvancedColorPicker } from "../AdvancedColorPicker";
 
 interface ColorTabProps {
   state: SuperellipseState;
