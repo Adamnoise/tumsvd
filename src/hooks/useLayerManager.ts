@@ -239,6 +239,28 @@ export function useLayerManager(): UseLayerManagerReturn {
     setSelectedLayerId(null);
   }, []);
 
+  // Shape Content Management
+  const updateShapeContent = useCallback((layerId: string, updates: Partial<ShapeContent>) => {
+    setLayers(prev => prev.map(layer => {
+      if (layer.id === layerId && layer.type === 'shape' && layer.content?.type === 'superellipse') {
+        return {
+          ...layer,
+          content: {
+            ...layer.content,
+            ...updates,
+          } as ShapeContent,
+        };
+      }
+      return layer;
+    }));
+  }, []);
+
+  const updateSelectedShapeContent = useCallback((updates: Partial<ShapeContent>) => {
+    if (selectedLayerId) {
+      updateShapeContent(selectedLayerId, updates);
+    }
+  }, [selectedLayerId, updateShapeContent]);
+
   return {
     layers,
     selectedLayerId,
