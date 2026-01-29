@@ -58,6 +58,7 @@ export const LayerItem = memo<LayerItemProps>(({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(layer.name);
+  const [dragOverZone, setDragOverZone] = useState<'top' | 'center' | 'bottom' | null>(null);
 
   const TypeIcon = LAYER_TYPE_ICONS[layer.type];
   const typeColor = LAYER_TYPE_COLORS[layer.type];
