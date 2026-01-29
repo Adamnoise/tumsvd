@@ -191,10 +191,11 @@ export const LayerItem = memo<LayerItemProps>(({
         )}
       </button>
 
-      {/* Type Icon */}
-      <div className={cn("p-1 rounded bg-muted/50 flex-shrink-0", typeColor)}>
-        <TypeIcon className="w-3 h-3" />
-      </div>
+      {/* Layer Thumbnail/Preview */}
+      <LayerThumbnail
+        layer={layer}
+        size="sm"
+      />
 
       {/* Layer Name */}
       {isEditing ? (
